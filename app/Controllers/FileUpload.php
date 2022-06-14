@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Models\TransactionModel;
 use App\View;
 use App\Models\CsvManager;
+use App\Database\Managers\Transactions;
 
 class FileUpload
 {
@@ -19,9 +20,10 @@ class FileUpload
     {
 
         $csvManager = new CsvManager();
-        $transactions = $csvManager->readFile($_FILES["file"]);
+        $transactionsDB = new Transactions();
+        $transactions = $csvManager->readFiles($_FILES["file"]);
 
-        $csvManager->uploadToDB($transactions);
+        $transactionsDB->uploadToDB($transactions);
         return View::make('transactions', ["transactions" => $transactions, "layout" => "defaultLayout"]);
     }
 }
