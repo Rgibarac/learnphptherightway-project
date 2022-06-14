@@ -14,52 +14,41 @@ use App\Model;
 
 class CsvManager extends Model
 {
-    public function readFile(array $filePaths): array
+
+    public function readFiles(array $filePaths): array
     {
 
         $contents = [];
 
         foreach ($filePaths["tmp_name"] as $each_tmp_name) {
-            $file = fopen($each_tmp_name, 'r');
-            if ($file !== FALSE) {
-                while (!feof($file)) {
-                    $content = fgetcsv($file);
-                    if (is_array($content)) {
-                        if ($content[0] != "Date") {
-                            array_push($contents, $content);
-                        }
-                    }
-
-                }
-            }
+            $content = $this->readFile($each_tmp_name);
+            $contents = array_merge($content, $contents);
         }
 
-
-        fclose($file);
 
         echo "<br/>";
 
         return $contents;
     }
 
-    public function uploadToDB(array $transactions): bool
+    private function readFile(string $filePath): array
     {
-        $query = "INSERT INTO transactions (date, check_number, description, amount) VALUES (?, ?, ?, ?);";
-        $statement = $this->db->prepare($query);
+        $content = [];
+        $file = fopen($filePath, 'r');
+        if ($file !== FALSE) {
+            while (!feof($file)) {
+                $currentline = fgetcsv($file);
+                if (is_array($currentline)) {
+                    if ($currentline[0] != "Date") {
+                        array_push($content, $currentline);
+                    }
+                }
 
-        foreach ($transactions as $transaction) {
-            $transactionDB = array(
-                "date" => $transaction[0],
-                "check_number" => $transaction[1],
-                "description" => $transaction[2],
-                "amount" => (float)(str_replace(",", "", (str_replace("$", "", $transaction[3]))))
-            );
-            $statement->execute(array_values($transactionDB));
-
+            }
         }
+        fclose($file);
 
-
-        return true;
+        return $content;
     }
 
 
